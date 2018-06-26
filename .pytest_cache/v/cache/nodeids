@@ -1,0 +1,6 @@
+[
+  "test_parser.py::TestParser::()::test_node_to_json",
+  "test_parser.py::TestParser::()::test_parse",
+  "test_parser.py::TestParser::()::test_make_tree",
+  "test_parser.py::TestParser::()::test_polish_notation"
+]
