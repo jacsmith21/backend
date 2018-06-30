@@ -17,11 +17,16 @@ crud.crud(app, mongo, 'courses')
 crud.crud(app, mongo, 'benchmarks')
 
 
-@app.route('/', methods=['POST'])
-def hello_world():
+@app.route('/', methods=['GET'])
+def root():
+    return 'Welcome to Jacob\'s application. This is the API!'
+
+
+@app.route('/parse', methods=['POST'])
+def parse():
     res = parser.parse(request.json['expression']).to_dict()
     return jsonify(res)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+    app.run(debug=True, use_reloader=True, host='localhost', port=3030)
