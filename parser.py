@@ -1,16 +1,24 @@
-import re
 import sys
 from collections import deque
 from enum import Enum
 
+import utils
+
 
 class Node:
     class Ops(Enum):
-        AND = '&'
-        OR = '|'
+        AND = '&', 'and'
+        OR = '|', 'or'
 
         def __eq__(self, other):
-            return other == self.value or super().__eq__(other)
+            if super().__eq__(other):
+                return True
+
+            for alias in self.value:
+                if other == alias:
+                    return True
+
+            return False
 
     def __init__(self, value=None, left=None, right=None):
         self.value = value
@@ -31,8 +39,14 @@ class Node:
             'right': self.right.to_dict() if self.right is not None else None
         }
 
+    def __repr__(self):
+        return 'Node({}, left={}, right={})'.format(self.value, self.leaf, self.right)
 
-OPS = {item.value: item for item in Node.Ops}
+
+OPS = set()
+for op in Node.Ops:
+    for al in op.value:
+        OPS.add(al)
 
 
 def convert_polish_notation(expression):
@@ -55,7 +69,7 @@ def convert_polish_notation(expression):
     while stack:
         output_queue.append(stack.pop())
 
-    return ''.join(reversed(list(output_queue)))
+    return list(reversed(list(output_queue)))
 
 
 def make_tree(polish_notation):
@@ -75,38 +89,12 @@ def parse(expression: str):
     :param expression:
     :return:
     """
-    expression = expression.replace(' ', '')
+    if not expression:
+        return Node('')
 
-    value_map = {}
-
-    delimiters = list(OPS.keys()) + [')', '(']
-    pattern = '|'.join(map(re.escape, delimiters))
-    literals = re.split(pattern, expression)
-    literals = filter(lambda literal: literal, literals)
-
-    start = 0
-    key = 0
-    substrings = []
-    for literal in literals:
-        value_map[str(key)] = literal
-        index = expression.index(literal, start)
-        substrings.append(expression[start:index]), substrings.append(str(key))
-        start, key = index + len(literal), key + 1
-
-    substrings.append(expression[start:])
-    expression = ''.join(substrings)
-
+    expression = utils.split(['and', 'or', '&', '|', '(', ')'], expression, keep=True)
     polish_notation = convert_polish_notation(expression)
     tree = make_tree(iter(polish_notation))
-
-    def replace(node):
-        if node is None:
-            return
-        if node.value not in OPS:
-            node.value = value_map[node.value]
-        replace(node.left), replace(node.right)
-
-    replace(tree)
     return tree
 
 

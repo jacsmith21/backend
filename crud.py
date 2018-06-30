@@ -29,24 +29,42 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
             return func(*args, **kwargs)
         return wrapper
 
+    def postprocess(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            unprocessed = func(*args, **kwargs)
+            if isinstance(unprocessed, dict):
+                unprocessed['_id'] = str(unprocessed['_id'])
+                return bson.json_util.dumps(unprocessed)
+            else:
+                processed = []
+                for item in unprocessed:
+                    item['_id'] = str(item['_id'])
+                    processed.append(item)
+                return bson.json_util.dumps(processed)
+
+        return wrapper
+
     @app.route(base, methods=['GET'])
     @set_name
     @get_collection
+    @postprocess
     def get_all(collection):
-        return bson.json_util.dumps(collection.find())
+        return collection.find()
 
     @app.route(base_id, methods=['GET'])
     @set_name
     @get_collection
     @process_id
+    @postprocess
     def get_one(collection, _id):
-        return bson.json_util.dumps(collection.find_one(_id))
+        return collection.find_one(_id)
 
     @app.route(base, methods=['POST'])
     @set_name
     @get_collection
     def create(collection):
-        collection.insert(flask.request.json)
+        collection.insert_one(flask.request.json)
         return 'created', http.HTTPStatus.CREATED
 
     @app.route(base_id, methods=['PUT'])
@@ -66,5 +84,5 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @get_collection
     @process_id
     def delete(collection, _id):
-        collection.remove(_id)
+        collection.delete_one({'_id': _id})
         return 'deleted'
