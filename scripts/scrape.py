@@ -18,6 +18,7 @@ Tag = collections.namedtuple('Tag', ['attrs', 'text'])
 
 
 RELATIONSHIPS = ['and', 'or']
+# TODO: fix MATH1053
 
 
 class Node:

@@ -26,14 +26,33 @@ def root():
 
 @app.route('/parse', methods=['GET'])
 def parse():
-    parsed = {}
-    for course in mongo.db.courses.find():
-        prerequisites = parser.parse(course['prerequisites'])
-        if prerequisites is None:
-            parsed[course['name']] = None
+    def to_dict(expression):
+        tree = parser.parse(expression)
+        if tree is None:
+            return None
         else:
-            parsed[course['name']] = prerequisites.to_dict()
+            return tree.to_dict()
+
+    parsed = []
+    for course in mongo.db.courses.find():
+        parsed.append({
+            'name': course['name'],
+            'prereqTree': to_dict(course['prerequisites']),
+            'coreqTree': to_dict(course['corequisites'])
+        })
+
     return jsonify(parsed)
+
+
+@app.route('/parse/<name>', methods=['GET'])
+def parse_course(name):
+    course = mongo.db.courses.find_one({'name': name})
+    prerequisites = parser.parse(course['prerequisites'])
+    if prerequisites is None:
+        prerequisite_tree = None
+    else:
+        prerequisite_tree = prerequisites.to_dict()
+    return jsonify(prerequisite_tree)
 
 
 if __name__ == '__main__':

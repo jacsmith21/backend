@@ -8,8 +8,9 @@ class TestParser(unittest.TestCase):
         node = parser.Node(value='&', left=parser.Node(value='HEY'), right=parser.Node(value='HO'))
         assert node.to_dict() == {
             'value': '&',
-            'left': {'value': 'HEY', 'left': None, 'right': None},
-            'right': {'value': 'HO', 'left': None, 'right': None}
+            'left': {'value': 'HEY', 'left': None, 'right': None, 'leaf': True},
+            'right': {'value': 'HO', 'left': None, 'right': None, 'leaf': True},
+            'leaf': False
         }
 
     def test_parse(self):
@@ -28,3 +29,8 @@ class TestParser(unittest.TestCase):
         assert parser.convert_polish_notation('(0|(1&2))&2') == list('&2|&210')
         assert parser.convert_polish_notation('0&1') == list('&10')
         assert parser.convert_polish_notation('((A&B)|C|D)') == list('||DC&BA')
+
+    def test_and_bracket_next_to_each_other(self):
+        tree = parser.parse('CS2333 and (STAT2593 or STAT3083)')
+        assert tree == parser.Node.Ops.AND
+        assert tree.right == 'CS2333'

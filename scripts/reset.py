@@ -13,7 +13,7 @@ db.drop_collection('benchmarks')
 print('Initializing the collection!')
 with open('data.json') as fp:
     courses = json.load(fp)
-courses = list(courses.values())
+courses = list(courses.values())[:15]
 
 collection = db.courses
 collection.insert_many(courses)

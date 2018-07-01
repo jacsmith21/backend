@@ -1,4 +1,3 @@
-import sys
 from collections import deque
 from enum import Enum
 
@@ -36,7 +35,8 @@ class Node:
         return {
             'value': self.value,
             'left': self.left.to_dict() if self.left is not None else None,
-            'right': self.right.to_dict() if self.right is not None else None
+            'right': self.right.to_dict() if self.right is not None else None,
+            'leaf': self.right is None and self.left is None
         }
 
     def __repr__(self):
@@ -92,15 +92,9 @@ def parse(expression: str):
     if not expression:
         return Node('')
 
-    expression = utils.split(['and', 'or', '&', '|', '(', ')'], expression, keep=True)
+    expression = utils.split([' and ', ' or ', ' & ', ' | ', '(', ')'], expression, keep=True)
+    expression = list(filter(lambda substring: substring, expression))
     polish_notation = convert_polish_notation(expression)
     tree = make_tree(iter(polish_notation))
     return tree
 
-
-def main():
-    print(parse(sys.argv[1]))
-
-
-if __name__ == '__main__':
-    main()
