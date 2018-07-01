@@ -1,3 +1,6 @@
+import os
+
+
 class DotDict(dict):
     def __getattr__(self, key):
         return self[key]
@@ -7,3 +10,4 @@ class DotDict(dict):
 
 
 db = DotDict(name='curriculummapping', uri='mongodb://localhost:27017/curriculummapping')
+ssl = ('ssl/fullchain.pem', 'ssl/privkey.pem')

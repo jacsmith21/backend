@@ -3,13 +3,14 @@ from flask import jsonify
 from flask_pymongo import PyMongo
 import flask_cors
 
+import config
 import crud
 import parser
 
 app = Flask(__name__)
 
-app.config['MONGO_DBNAME'] = 'curriculummapping'
-app.config['MONGO_URI'] = 'mongodb://localhost:27017/curriculummapping'
+app.config['MONGO_DBNAME'] = config.db.name
+app.config['MONGO_URI'] = config.db.uri
 
 flask_cors.CORS(app)
 
@@ -56,4 +57,4 @@ def parse_course(name):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(ssl_context=config.ssl)
