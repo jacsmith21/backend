@@ -1,4 +1,5 @@
 import json
+import os
 
 from pymongo import MongoClient
 
@@ -11,7 +12,8 @@ db.drop_collection('courses')
 db.drop_collection('benchmarks')
 
 print('Initializing the collection!')
-with open('data.json') as fp:
+directory = os.path.dirname(__file__)
+with open(os.path.join(directory, 'data.json')) as fp:
     courses = json.load(fp)
 courses = list(courses.values())[:15]
 
