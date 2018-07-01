@@ -9,5 +9,6 @@ class DotDict(dict):
         self[key] = value
 
 
-db = DotDict(name='curriculummapping', uri='mongodb://localhost:27017/curriculummapping')
+uri = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/curriculummapping')
+db = DotDict(name=os.path.basename(uri), uri=uri)
 ssl = ('ssl/fullchain.pem', 'ssl/privkey.pem')
