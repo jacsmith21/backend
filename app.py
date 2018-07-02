@@ -36,6 +36,7 @@ def parse():
 
     parsed = []
     for course in mongo.db.courses.find():
+        course = course['current']
         parsed.append({
             'name': course['name'],
             'prereqTree': to_dict(course['prerequisites']),
@@ -45,16 +46,5 @@ def parse():
     return jsonify(parsed)
 
 
-@app.route('/parse/<name>', methods=['GET'])
-def parse_course(name):
-    course = mongo.db.courses.find_one({'name': name})
-    prerequisites = parser.parse(course['prerequisites'])
-    if prerequisites is None:
-        prerequisite_tree = None
-    else:
-        prerequisite_tree = prerequisites.to_dict()
-    return jsonify(prerequisite_tree)
-
-
 if __name__ == '__main__':
-    app.run(ssl_context=config.ssl)
+    app.run()

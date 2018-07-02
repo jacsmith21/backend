@@ -29,8 +29,11 @@ print('Inserted {} benchmarks'.format(len(benchmarks)))
 
 print('Adding test benchmarks relationships!')
 for course, benchmark_id in zip(courses, ids):
-    course['benchmarks'] = [benchmark_id]
-courses[0]['benchmarks'].append(ids[1])
+    course['base']['benchmarks'] = [benchmark_id]
+courses[0]['base']['benchmarks'].append(ids[1])
+
+for course, _ in zip(courses, ids):
+    course['current'] = course['base']
 
 collection = db.courses
 collection.insert_many(courses)
