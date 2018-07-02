@@ -4,6 +4,7 @@ import os
 from pymongo import MongoClient
 
 import config
+import utils
 
 print('Dropping the collection!')
 client = MongoClient(host=config.db.uri)
@@ -16,15 +17,17 @@ directory = os.path.dirname(__file__)
 with open(os.path.join(directory, 'data.json')) as fp:
     courses = json.load(fp)
 courses = list(courses.values())[:15]
+courses = [utils.format_json(course) for course in courses]
 
 collection = db.benchmarks
 benchmarks = ['Benchmark 1.0', 'Benchmark 1.1', 'Benchmark 1.2', 'Benchmark 1.3', 'Benchmark 2.0']
 benchmarks = [{'name': name} for name in benchmarks]
+benchmarks = [utils.format_json(benchmark) for benchmark in benchmarks]
 ids = collection.insert_many(benchmarks).inserted_ids
 assert collection.count() == len(benchmarks)
 print('Inserted {} benchmarks'.format(len(benchmarks)))
 
-print('Adding test benchmarks!')
+print('Adding test benchmarks relationships!')
 for course, benchmark_id in zip(courses, ids):
     course['benchmarks'] = [benchmark_id]
 courses[0]['benchmarks'].append(ids[1])

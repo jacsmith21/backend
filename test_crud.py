@@ -3,6 +3,7 @@ import http
 import bson.json_util
 import unittest
 
+import jsonpatch
 import mongomock
 from flask import Flask
 
@@ -19,6 +20,7 @@ class TestCrud(unittest.TestCase):
         self.app = app.test_client()
 
         self.objects = [dict(foo='bar'), dict(foo='rab')]
+        self.objects = [dict(current=obj.copy(), base=obj.copy(), patch=[]) for obj in self.objects]
         for obj in self.objects:
             obj['_id'] = mongo.db.tests.insert(obj)
 
@@ -40,13 +42,16 @@ class TestCrud(unittest.TestCase):
         res = self.app.post('/tests', data=bson.json_util.dumps(dict(foo='oof')), content_type='application/json')
         assert res.status_code == http.HTTPStatus.CREATED
 
-    def test_update(self):
-        new_obj = self.objects[0]
+    def test_patch(self):
+        new_obj = self.objects[0].copy()
         new_obj['foo'] = 'bbar'
-        res = self.app.put(
+        patch = jsonpatch.make_patch(self.objects[0], new_obj)
+
+        res = self.app.patch(
             '/tests/{}'.format(self.objects[0]['_id']),
-            data=bson.json_util.dumps(new_obj),
+            data=bson.json_util.dumps(patch),
             content_type='application/json')
+
         assert res.status_code == http.HTTPStatus.OK
 
     def test_delete(self):

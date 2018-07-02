@@ -1,13 +1,15 @@
 import http
 import functools
 
+import jsonpatch as jsonpatch
 import mongomock
 import bson.json_util
 import flask
 import flask_pymongo
 
+import utils
 
-# TODO: Make this use models.py eventually. Right now we do not need a defined schema as it is much faster to iterate.
+
 def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient, name: str):
     base = '/{}'.format(name)
     base_id = '{}/<_id>'.format(base)
@@ -30,18 +32,16 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return wrapper
 
     def postprocess(func):
+        def process_item(item):
+            return {'_id': str(item['_id']), **item['current']}
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             unprocessed = func(*args, **kwargs)
             if isinstance(unprocessed, dict):
-                unprocessed['_id'] = str(unprocessed['_id'])
-                return bson.json_util.dumps(unprocessed)
+                return bson.json_util.dumps(process_item(unprocessed))
             else:
-                processed = []
-                for item in unprocessed:
-                    item['_id'] = str(item['_id'])
-                    processed.append(item)
-                return bson.json_util.dumps(processed)
+                return bson.json_util.dumps([process_item(item) for item in unprocessed])
 
         return wrapper
 
@@ -64,20 +64,22 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @set_name
     @get_collection
     def create(collection):
-        collection.insert_one(flask.request.json)
+        collection.insert_one(utils.format_json(flask.request.json))
         return 'created', http.HTTPStatus.CREATED
 
-    @app.route(base_id, methods=['PUT'])
+    @app.route(base_id, methods=['PATCH'])
     @set_name
     @get_collection
     @process_id
-    def update(collection, _id):
+    def patch(collection, _id):
         instance = collection.find_one({'_id': _id})
-        instance = {**instance, **flask.request.json}  # flask.request.json overwrites instance
-        _id = instance['_id']
-        del instance['_id']
+        instance['patch'].extend(flask.request.json)
+
+        json_patch = jsonpatch.JsonPatch(flask.request.json)
+        instance['current'] = json_patch.apply(instance['current'])
+
         collection.replace_one({'_id': _id}, instance)
-        return 'updated'
+        return 'patched'
 
     @app.route(base_id, methods=['DELETE'])
     @set_name
