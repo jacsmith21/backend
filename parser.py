@@ -74,7 +74,7 @@ def convert_polish_notation(expression):
 
 def make_tree(polish_notation):
     current = next(polish_notation, None)
-    if current is None:
+    if current is None or current == '':
         return None
     elif current in OPS:
         return Node(value=current, left=make_tree(polish_notation), right=make_tree(polish_notation))
@@ -90,7 +90,7 @@ def parse(expression: str):
     :return:
     """
     if not expression:
-        return Node('')
+        return None
 
     expression = utils.split([' and ', ' or ', ' & ', ' | ', '(', ')'], expression, keep=True)
     expression = list(filter(lambda substring: substring, expression))

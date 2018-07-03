@@ -16,7 +16,7 @@ print('Initializing the collection!')
 directory = os.path.dirname(__file__)
 with open(os.path.join(directory, 'data.json')) as fp:
     courses = json.load(fp)
-courses = list(courses.values())[:15]
+courses = list(courses.values())[:15]  # lets just put in 15 for now
 courses = [utils.format_json(course) for course in courses]
 
 collection = db.benchmarks
