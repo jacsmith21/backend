@@ -1,6 +1,8 @@
 import json
 import os
+import time
 
+import jsonpatch
 from pymongo import MongoClient
 
 import config
@@ -34,6 +36,17 @@ courses[0]['base']['benchmarks'].append(ids[1])
 
 for course, _ in zip(courses, ids):
     course['current'] = course['base']
+
+course = courses[0]
+src = course['base']
+dst = src.copy()
+dst['maintainer'] = 'Jacob'
+dst['title'] = 'Patching Title'
+dst['description'] = None
+timestamp = time.time()
+course['patch'] = [{**operation, 'time': timestamp} for operation in jsonpatch.make_patch(src, dst)]
+course['current'] = dst
+print('Adding fake patches to {}'.format(src['name']))
 
 collection = db.courses
 collection.insert_many(courses)

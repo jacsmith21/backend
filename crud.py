@@ -1,7 +1,9 @@
+import datetime
 import http
 import functools
+import time
 
-import jsonpatch as jsonpatch
+import jsonpatch
 import mongomock
 import bson.json_util
 import flask
@@ -52,13 +54,40 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     def get_all(collection):
         return collection.find()
 
+    @app.route('{}/history'.format(base_id), methods=['GET'])
+    @set_name
+    @get_collection
+    @process_id
+    def get_history(collection, _id):
+        instance = collection.find_one(_id)
+        return bson.json_util.dumps(instance['patch'])
+
     @app.route(base_id, methods=['GET'])
     @set_name
     @get_collection
     @process_id
     @postprocess
     def get_one(collection, _id):
-        return collection.find_one(_id)
+        date = flask.request.args.get('date')
+        if date is None:
+            return collection.find_one(_id)
+        else:
+            # TODO: Create test
+            instance = collection.find_one(_id)
+            history = instance['history']
+
+            date = utils.date_to_datetime(date)
+            date = utils.unix_time(date)
+            i = 0
+            for operation in history:
+                if date < operation['time']:
+                    break
+                i += 1
+            json_patch = jsonpatch.JsonPatch(history[:i])
+            return {
+                '_id': instance['_id'],
+                'current': json_patch.apply(instance['base'])
+            }
 
     @app.route(base, methods=['POST'])
     @set_name
@@ -73,9 +102,12 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @process_id
     def patch(collection, _id):
         instance = collection.find_one({'_id': _id})
-        instance['patch'].extend(flask.request.json)
+        operations = flask.request.json
+        timestamp = time.time()
+        operations = [{**operation, 'time': timestamp} for operation in operations]
+        instance['patch'].extend(operations)
 
-        json_patch = jsonpatch.JsonPatch(flask.request.json)
+        json_patch = jsonpatch.JsonPatch(operations)
         instance['current'] = json_patch.apply(instance['current'])
 
         collection.replace_one({'_id': _id}, instance)

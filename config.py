@@ -1,7 +1,8 @@
 import os
 
 
-class DotDict(dict):
+# noinspection PyPep8Naming
+class dot(dict):
     def __getattr__(self, key):
         return self[key]
 
@@ -10,4 +11,4 @@ class DotDict(dict):
 
 
 uri = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/curriculummapping')
-db = DotDict(name=os.path.basename(uri), uri=uri)
+db = dot(name=os.path.basename(uri), uri=uri)
