@@ -8,9 +8,11 @@ import mongomock
 from flask import Flask
 
 import crud
+import utils
 
 
 class TestCrud(unittest.TestCase):
+    # noinspection PyTypeChecker
     def setUp(self):
         app = Flask(__name__)
 
@@ -21,6 +23,16 @@ class TestCrud(unittest.TestCase):
 
         self.objects = [dict(foo='bar'), dict(foo='rab')]
         self.objects = [dict(current=obj.copy(), base=obj.copy(), patch=[]) for obj in self.objects]
+
+        obj = self.objects[0]['current'].copy()
+        obj['bat'] = 'br'
+        obj['foo'] = 'br'
+        patch = jsonpatch.make_patch(self.objects[0]['current'], obj).patch
+        patch[0]['time'] = utils.unix_time(utils.date_to_datetime('2016-01-01'))
+        patch[1]['time'] = utils.unix_time(utils.date_to_datetime('2017-01-01'))
+        self.objects[0]['patch'] = patch
+        self.objects[0]['current'] = obj
+
         for obj in self.objects:
             obj['_id'] = mongo.db.tests.insert(obj)
 
@@ -35,8 +47,14 @@ class TestCrud(unittest.TestCase):
         res = self.app.get('/tests/{}'.format(self.objects[0]['_id']))
         data = bson.json_util.loads(res.data)
         assert isinstance(data, dict)
-        assert data['foo'] == 'bar'
+        assert data['foo'] == 'br'
         assert res.status_code == http.HTTPStatus.OK
+
+    def test_get_one_with_date(self):
+        res = self.app.get('/tests/{}?date={}'.format(self.objects[0]['_id'], '2016-05-05'))
+        data = bson.json_util.loads(res.data)
+        assert isinstance(data, dict)
+        assert data == {'_id': str(self.objects[0]['_id']), 'foo': 'bar', 'bat': 'br'}
 
     def test_create(self):
         res = self.app.post('/tests', data=bson.json_util.dumps(dict(foo='oof')), content_type='application/json')

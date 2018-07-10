@@ -1,4 +1,3 @@
-import datetime
 import http
 import functools
 import time
@@ -72,9 +71,8 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         if date is None:
             return collection.find_one(_id)
         else:
-            # TODO: Create test
             instance = collection.find_one(_id)
-            history = instance['history']
+            history = instance['patch']
 
             date = utils.date_to_datetime(date)
             date = utils.unix_time(date)
