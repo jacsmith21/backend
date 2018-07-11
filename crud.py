@@ -59,7 +59,10 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @process_id
     def get_history(collection, _id):
         instance = collection.find_one(_id)
-        return bson.json_util.dumps(instance['patch'])
+        history = instance['patch']
+        for operation in history:
+            operation['time'] = utils.unix_to_date(operation['time'])
+        return bson.json_util.dumps(history)
 
     @app.route(base_id, methods=['GET'])
     @set_name

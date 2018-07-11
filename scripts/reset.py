@@ -42,9 +42,12 @@ src = course['base']
 dst = src.copy()
 dst['maintainer'] = 'Jacob'
 dst['title'] = 'Patching Title'
-dst['description'] = None
-timestamp = time.time()
-course['patch'] = [{**operation, 'time': timestamp} for operation in jsonpatch.make_patch(src, dst)]
+del dst['description']
+now = time.time()
+day = 24*60*60
+timestamps = [now - 2 * day, now - day, now]
+course['patch'] = \
+    [{**operation, 'time': timestamp} for operation, timestamp in zip(jsonpatch.make_patch(src, dst), timestamps)]
 course['current'] = dst
 print('Adding fake patches to {}'.format(src['name']))
 
