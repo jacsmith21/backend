@@ -12,3 +12,4 @@ class dot(dict):
 
 uri = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/curriculummapping')
 db = dot(name=os.path.basename(uri), uri=uri)
+secret_key = os.environ.get('SECRET_KEY', 'sajfdklsdjflkdsja')

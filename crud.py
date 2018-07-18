@@ -47,6 +47,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return wrapper
 
     @app.route(base, methods=['GET'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     @postprocess
@@ -54,6 +55,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return collection.find()
 
     @app.route('{}/history'.format(base_id), methods=['GET'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     @process_id
@@ -65,6 +67,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return bson.json_util.dumps(history)
 
     @app.route(base_id, methods=['GET'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     @process_id
@@ -91,6 +94,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
             }
 
     @app.route(base, methods=['POST'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     def create(collection):
@@ -98,6 +102,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return 'created', http.HTTPStatus.CREATED
 
     @app.route(base_id, methods=['PATCH'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     @process_id
@@ -115,6 +120,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         return 'patched'
 
     @app.route(base_id, methods=['DELETE'])
+    @utils.token_required(mongo)
     @set_name
     @get_collection
     @process_id

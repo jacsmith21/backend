@@ -1,7 +1,13 @@
+import datetime
+import http
+import time
+
+import jwt
 from flask import Flask
-from flask import jsonify
+import flask
 from flask_pymongo import PyMongo
 import flask_cors
+from werkzeug import security
 
 import config
 import crud
@@ -18,6 +24,43 @@ mongo = PyMongo(app)
 
 crud.crud(app, mongo, 'courses')
 crud.crud(app, mongo, 'benchmarks')
+crud.crud(app, mongo, 'users')
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = flask.request.json.get('username')
+    password = flask.request.json.get('password')
+
+    user = mongo.db.users.find_one({'username': username})
+    if not user or not security.check_password_hash(user['password'], password):
+        return 'BAD', http.HTTPStatus.BAD_REQUEST
+
+    token = jwt.encode(
+        {
+            'sub': user['username'],
+            'iat': time.time(),
+            'exp': time.time() + 60*60*30  # 30 minutes
+        },
+        config.secret_key
+    )
+
+    return flask.jsonify(token.decode('UTF-8'))
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    json = flask.request.get_json()
+    username, password = json.get('username'), json.get('password')
+
+    user = mongo.db.users.find_one({'username': username})
+    if user:
+        return 'BAD', http.HTTPStatus.BAD_REQUEST
+
+    json['password'] = security.generate_password_hash(password, method='sha256')
+    mongo.db.users.insert_one(flask.request.json)
+
+    return 'OK'
 
 
 @app.route('/', methods=['GET'])
