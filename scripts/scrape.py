@@ -168,7 +168,7 @@ for link in soup.findAll('a', href=re.compile('\.\./frederictoncourses/'))[:41]:
         prerequisites, corequisites = parse(prerequisites), parse(corequisites)
 
         course = {
-            'name': name,
+            'number': name,
             'title': soup.find('th', {'abbr': 'Course Dscription'}).text,
             'description': soup.find('course_description').text,
             'prerequisites': prerequisites,

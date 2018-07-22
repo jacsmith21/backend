@@ -1,4 +1,4 @@
-import datetime
+import bson
 import http
 import time
 
@@ -12,6 +12,7 @@ from werkzeug import security
 import config
 import crud
 import parser
+import utils
 
 app = Flask(__name__)
 
@@ -24,7 +25,15 @@ mongo = PyMongo(app)
 
 crud.crud(app, mongo, 'courses')
 crud.crud(app, mongo, 'benchmarks')
-crud.crud(app, mongo, 'users')
+
+
+@app.route('/export/<_id>')
+def export(_id):
+    collection = mongo.db.courses
+    _id = bson.ObjectId(_id)
+    course = collection.find_one(_id)
+    with utils.export(course) as path:
+        return flask.send_file(path, mimetype='application/vnd.ms-excel', as_attachment=True)
 
 
 @app.route('/login', methods=['POST'])
@@ -39,8 +48,8 @@ def login():
     token = jwt.encode(
         {
             'sub': user['username'],
-            'iat': time.time(),
-            'exp': time.time() + 60*60*30  # 30 minutes
+            'iat': int(time.time()),
+            'exp': int(time.time()) + 60*60  # 60 minutes
         },
         config.secret_key
     )
@@ -50,12 +59,15 @@ def login():
 
 @app.route('/register', methods=['POST'])
 def register():
-    json = flask.request.get_json()
-    username, password = json.get('username'), json.get('password')
+    json = flask.request.json
+    username, password, code = json.get('username'), json.get('password'), json.get('code')
+
+    if code != config.code:
+        return flask.jsonify({'message': 'Invalid code.'}), http.HTTPStatus.UNAUTHORIZED
 
     user = mongo.db.users.find_one({'username': username})
-    if user:
-        return 'BAD', http.HTTPStatus.BAD_REQUEST
+    if user is not None:
+        return flask.jsonify({'message': 'Username already exists'}), http.HTTPStatus.BAD_REQUEST
 
     json['password'] = security.generate_password_hash(password, method='sha256')
     mongo.db.users.insert_one(flask.request.json)
@@ -69,6 +81,7 @@ def root():
 
 
 @app.route('/parse', methods=['GET'])
+@utils.authenticate(mongo)
 def parse():
     def to_dict(expression):
         tree = parser.parse(expression)
@@ -81,12 +94,12 @@ def parse():
     for course in mongo.db.courses.find():
         course = course['current']
         parsed.append({
-            'name': course['name'],
+            'number': course['number'],
             'prereqTree': to_dict(course['prerequisites']),
             'coreqTree': to_dict(course['corequisites'])
         })
 
-    return jsonify(parsed)
+    return flask.jsonify(parsed)
 
 
 if __name__ == '__main__':

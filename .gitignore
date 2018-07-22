@@ -1,6 +1,8 @@
 #### Project Specific ###
 __pycache__
 *.pyc
+CODE
+SECRET_KEY
 
 ### jetbrains ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm

@@ -6,3 +6,5 @@ mongomock
 gunicorn
 jsonpatch
 PyJWT
+html5lib
+openpyxl

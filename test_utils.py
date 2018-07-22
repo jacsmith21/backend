@@ -1,5 +1,7 @@
 import unittest
 
+import openpyxl
+
 import utils
 
 DATE = '2018-07-04'
@@ -24,3 +26,10 @@ class TestUtils(unittest.TestCase):
         dt = utils.date_to_datetime(DATE)
         unix = utils.unix_time(dt)
         assert utils.unix_to_date(unix) == DATE
+
+    def test_export(self):
+        with utils.export({'number': 'JACOB'}) as path:
+            workbook = openpyxl.load_workbook(path)
+            sheet = workbook['JACOB']
+            assert sheet['C3'].internal_value == 'JACOB'
+            workbook.close()

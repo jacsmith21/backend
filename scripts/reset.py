@@ -8,6 +8,8 @@ from pymongo import MongoClient
 import config
 import utils
 
+COURSE_COUNT = 15
+
 print('Dropping the collection!')
 client = MongoClient(host=config.db.uri)
 db = client[config.db.name]
@@ -18,7 +20,7 @@ print('Initializing the collection!')
 directory = os.path.dirname(__file__)
 with open(os.path.join(directory, 'data.json')) as fp:
     courses = json.load(fp)
-courses = list(courses.values())[:15]  # lets just put in 15 for now
+courses = list(courses.values())[:COURSE_COUNT]
 courses = [utils.format_json(course) for course in courses]
 
 collection = db.benchmarks
@@ -42,14 +44,16 @@ src = course['base']
 dst = src.copy()
 dst['maintainer'] = 'Jacob'
 dst['title'] = 'Patching Title'
+dst['sections'] = [{'instructor': 'Jacob', 'section': 'FRO1A', 'count': 55}]
 del dst['description']
 now = time.time()
 day = 24*60*60
-timestamps = [now - 2 * day, now - day, now]
+timestamps = [now - 2 * day, now - day, now, now]
+types = ['minor', 'major', 'minor', 'minor']
 course['patch'] = \
-    [{**operation, 'time': timestamp} for operation, timestamp in zip(jsonpatch.make_patch(src, dst), timestamps)]
+    [{**operation, 'time': timestamp, 'type': _type} for operation, timestamp, _type in zip(jsonpatch.make_patch(src, dst), timestamps, types)]
 course['current'] = dst
-print('Adding fake patches to {}'.format(src['name']))
+print('Adding fake patches to {}'.format(src['number']))
 
 collection = db.courses
 collection.insert_many(courses)
