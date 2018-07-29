@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import http
+import logging
 import os
 import re
 import datetime
@@ -35,7 +36,8 @@ EXPORT_MAP = {
     'auDistribution.naturalScience': 'G11',
     'auDistribution.complementaryStudies': 'I11',
     'auDistribution.engineeringScience': 'K11',
-    'auDistribution.engineeringDesign': 'M11'
+    'auDistribution.engineeringDesign': 'M11',
+    'learningOutcomes': 'D28:D39'
 }
 
 
@@ -74,6 +76,25 @@ def datetime_to_date(dt: datetime.datetime):
     return dt.strftime(FORMAT)
 
 
+def crange(start, end):
+    start, end = ord(start), ord(end)
+    for i in range(start, end + 1):
+        yield chr(i)
+
+
+def make_cells(start: str, end: str):
+    c1, n1 = start[:1], int(start[1:])  # character, number
+    c2, n2 = end[:1], int(end[1:])
+    if c1 != c2 and n1 != n2:
+        raise Exception
+    if c1 != c2:
+        for c in crange(c1, c2):
+            yield f'{c}{n1}'
+    else:
+        for n in range(n1, n2 + 1):
+            yield f'{c1}{n}'
+
+
 def authenticate(mongo: flask_pymongo.PyMongo):
     def decorator(f):
         @functools.wraps(f)
@@ -96,16 +117,33 @@ def authenticate(mongo: flask_pymongo.PyMongo):
 
 @contextlib.contextmanager
 def export(course):
+    course = course['current']
     with tempfile.TemporaryDirectory() as tempdir:
-        src = os.path.join(os.path.dirname(__file__), 'base.xlsm')
+        src = os.path.join(os.path.dirname(__file__), 'base.xlsx')
         dst = os.path.join(tempdir, '{}.xlsm'.format(course['number']))
 
         workbook = openpyxl.load_workbook(src)
-        sheet = workbook['CSE_Shortlist']
+        sheet = workbook['CIS']
         sheet.title = course['number']
 
-        for key in course:
-            sheet[EXPORT_MAP[key]] = course[key]
+        for key in EXPORT_MAP:
+            cell = EXPORT_MAP[key]
+            item = course
+            for k in key.split('.'):
+                if not key:
+                    continue
+                elif k not in item:
+                    logging.warning('{} is not in the course or export map!'.format(key))
+                    break
+                item = item[k]
+            else:
+                if ':' in cell:
+                    # ok, item should be a list and cell is a range
+                    start, end = cell.split(':')
+                    for item, cell in zip(item, make_cells(start, end)):
+                        sheet[cell] = item
+                else:
+                    sheet[cell] = item
 
         workbook.save(dst)
         workbook.close()

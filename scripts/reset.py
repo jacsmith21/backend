@@ -46,10 +46,12 @@ dst['maintainer'] = 'Jacob'
 dst['title'] = 'Patching Title'
 dst['sections'] = [{'instructor': 'Jacob', 'section': 'FRO1A', 'count': 55}]
 del dst['description']
+dst['learningOutcomes'] = ['one', 'two', 'three']
+dst['caebAttributes'] = dict(knowledgeBase='I', problemAnalysis='D')
 now = time.time()
 day = 24*60*60
-timestamps = [now - 2 * day, now - day, now, now]
-types = ['minor', 'major', 'minor', 'minor']
+timestamps = [now - 2 * day, now - day, now, now, now, now]
+types = ['minor', 'major', 'minor', 'minor', 'minor', 'minor']
 course['patch'] = \
     [{**operation, 'time': timestamp, 'type': _type} for operation, timestamp, _type in zip(jsonpatch.make_patch(src, dst), timestamps, types)]
 course['current'] = dst

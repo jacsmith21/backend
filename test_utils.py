@@ -33,3 +33,10 @@ class TestUtils(unittest.TestCase):
             sheet = workbook['JACOB']
             assert sheet['C3'].internal_value == 'JACOB'
             workbook.close()
+
+    def test_crange(self):
+        assert list(utils.crange('A', 'D')) == ['A', 'B', 'C', 'D']
+
+    def test_make_cells(self):
+        assert list(utils.make_cells('A1', 'C1')) == ['A1', 'B1', 'C1']
+        assert list(utils.make_cells('A1', 'A3')) == ['A1', 'A2', 'A3']
