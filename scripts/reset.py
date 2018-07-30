@@ -62,4 +62,7 @@ collection.insert_many(courses)
 assert collection.count() == len(courses)
 print('Inserted {} courses!'.format(len(courses)))
 
+collection = db.users
+collection.insert_many([{'email': 'email', 'password': 'password'}])
+
 print('Finished')
