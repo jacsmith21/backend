@@ -18,10 +18,6 @@ class TestUtils(unittest.TestCase):
         dt = utils.date_to_datetime(DATE)
         assert utils.unix_time(dt) == 1530662400
 
-    def test_datetime_to_date(self):
-        dt = utils.date_to_datetime(DATE)
-        assert utils.datetime_to_date(dt) == DATE
-
     def test_unix_to_date(self):
         dt = utils.date_to_datetime(DATE)
         unix = utils.unix_time(dt)

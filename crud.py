@@ -62,10 +62,7 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @process_id
     def get_history(collection, _id):
         instance = collection.find_one(_id)
-        history = instance['patch']
-        for operation in history:
-            operation['time'] = utils.unix_to_date(operation['time'])
-        return bson.json_util.dumps(history)
+        return bson.json_util.dumps(instance['patch'])
 
     @app.route(base_id, methods=['GET'])
     @utils.authenticate(mongo)
@@ -74,18 +71,16 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @process_id
     @postprocess
     def get_one(collection, _id):
-        date = flask.request.args.get('date')
-        if date is None:
+        t = flask.request.args.get('time')
+        if t is None:
             return collection.find_one(_id)
         else:
             instance = collection.find_one(_id)
             history = instance['patch']
 
-            date = utils.date_to_datetime(date)
-            date = utils.unix_time(date)
             i = 0
             for operation in history:
-                if date < operation['time']:
+                if t < operation['time']:
                     break
                 i += 1
             json_patch = jsonpatch.JsonPatch(history[:i])
@@ -107,12 +102,12 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @set_name
     @get_collection
     @process_id
-    def patch(collection, _id):
+    def patch(collection, _id, user):
         instance = collection.find_one({'_id': _id})
         operations = flask.request.json
         _type = flask.request.args.get('type')
         timestamp = time.time()
-        operations = [{**operation, 'time': timestamp, 'type': _type} for operation in operations]
+        operations = [{**operation, 'time': timestamp, 'type': _type, 'initials': user['initials']} for operation in operations]
         instance['patch'].extend(operations)
 
         json_patch = jsonpatch.JsonPatch(operations)

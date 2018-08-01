@@ -4,6 +4,7 @@ import time
 
 import jsonpatch
 from pymongo import MongoClient
+from werkzeug import security
 
 import config
 import utils
@@ -15,6 +16,7 @@ client = MongoClient(host=config.db.uri)
 db = client[config.db.name]
 db.drop_collection('courses')
 db.drop_collection('benchmarks')
+db.drop_collection('users')
 
 print('Initializing the collection!')
 directory = os.path.dirname(__file__)
@@ -53,7 +55,7 @@ day = 24*60*60
 timestamps = [now - 2 * day, now - day, now, now, now, now]
 types = ['minor', 'major', 'minor', 'minor', 'minor', 'minor']
 course['patch'] = \
-    [{**operation, 'time': timestamp, 'type': _type} for operation, timestamp, _type in zip(jsonpatch.make_patch(src, dst), timestamps, types)]
+    [{**operation, 'time': timestamp, 'type': _type, 'initials': 'JS'} for operation, timestamp, _type in zip(jsonpatch.make_patch(src, dst), timestamps, types)]
 course['current'] = dst
 print('Adding fake patches to {}'.format(src['number']))
 
@@ -63,6 +65,10 @@ assert collection.count() == len(courses)
 print('Inserted {} courses!'.format(len(courses)))
 
 collection = db.users
-collection.insert_many([{'email': 'email', 'password': 'password'}])
+collection.insert_many([{
+    'username': 'username',
+    'password': security.generate_password_hash('password', method='sha256'),
+    'initials': 'JS'
+}])
 
 print('Finished')

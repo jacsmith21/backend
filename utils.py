@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import http
+import inspect
 import logging
 import os
 import re
@@ -72,10 +73,6 @@ def date_to_datetime(date):
     return datetime.datetime.strptime(date, FORMAT)
 
 
-def datetime_to_date(dt: datetime.datetime):
-    return dt.strftime(FORMAT)
-
-
 def crange(start, end):
     start, end = ord(start), ord(end)
     for i in range(start, end + 1):
@@ -106,11 +103,16 @@ def authenticate(mongo: flask_pymongo.PyMongo):
                 user = mongo.db.users.find_one({'username': data['sub']})
                 if not user:
                     raise RuntimeError('User not found')
+
+                if 'user' in inspect.signature(f).parameters:
+                    kwargs['user'] = user
+
                 return f(*args, **kwargs)
             except jwt.ExpiredSignatureError:
                 return flask.jsonify({'message': 'Expired token. Re-authentication required.'}), http.HTTPStatus.UNAUTHORIZED
             except jwt.InvalidTokenError:
                 return flask.jsonify({'message': 'Invalid token. Registration and / or authentication required'}), http.HTTPStatus.UNAUTHORIZED
+
         return wrapper
     return decorator
 
