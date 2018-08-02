@@ -75,6 +75,8 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
         if t is None:
             return collection.find_one(_id)
         else:
+            t = int(t)
+
             instance = collection.find_one(_id)
             history = instance['patch']
 
