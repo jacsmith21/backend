@@ -95,8 +95,8 @@ def parse():
         course = course['current']
         parsed.append({
             'number': course['number'],
-            'prereqTree': to_dict(course['prerequisites']),
-            'coreqTree': to_dict(course['corequisites'])
+            'prereqTree': to_dict(course.get('prerequisites', '')),
+            'coreqTree': to_dict(course.get('corequisites', ''))
         })
 
     return flask.jsonify(parsed)

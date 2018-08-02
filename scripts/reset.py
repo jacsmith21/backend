@@ -11,6 +11,7 @@ import utils
 
 COURSE_COUNT = 15
 
+print(f'Connecting to {config.db.uri}')
 print('Dropping the collection!')
 client = MongoClient(host=config.db.uri)
 db = client[config.db.name]
@@ -29,16 +30,17 @@ collection = db.benchmarks
 benchmarks = ['Benchmark 1.0', 'Benchmark 1.1', 'Benchmark 1.2', 'Benchmark 1.3', 'Benchmark 2.0']
 benchmarks = [{'name': name} for name in benchmarks]
 benchmarks = [utils.format_json(benchmark) for benchmark in benchmarks]
-ids = collection.insert_many(benchmarks).inserted_ids
+collection.insert_many(benchmarks)
 assert collection.count() == len(benchmarks)
 print('Inserted {} benchmarks'.format(len(benchmarks)))
 
 print('Adding test benchmarks relationships!')
-for course, benchmark_id in zip(courses, ids):
-    course['base']['benchmarks'] = [benchmark_id]
-courses[0]['base']['benchmarks'].append(ids[1])
+benchmarks = list(map(lambda b: b['current']['name'], benchmarks))
+for course, benchmark in zip(courses, benchmarks):
+    course['base']['benchmarks'] = [benchmark]
+courses[0]['base']['benchmarks'].append(benchmarks[1])
 
-for course, _ in zip(courses, ids):
+for course in courses:
     course['current'] = course['base']
 
 course = courses[0]
