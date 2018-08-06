@@ -96,8 +96,8 @@ def crud(app: flask.Flask, mongo: flask_pymongo.PyMongo or mongomock.MongoClient
     @set_name
     @get_collection
     def create(collection):
-        collection.insert_one(utils.format_json(flask.request.json))
-        return 'created', http.HTTPStatus.CREATED
+        result = collection.insert_one(utils.format_json(flask.request.json))
+        return str(result.inserted_id), http.HTTPStatus.CREATED
 
     @app.route(base_id, methods=['PATCH'])
     @utils.authenticate(mongo)
