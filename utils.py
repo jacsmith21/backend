@@ -109,9 +109,9 @@ def authenticate(mongo: flask_pymongo.PyMongo):
 
                 return f(*args, **kwargs)
             except jwt.ExpiredSignatureError:
-                return flask.jsonify({'message': 'Expired token. Re-authentication required.'}), http.HTTPStatus.UNAUTHORIZED
+                return flask.jsonify('Expired token. Re-authentication required.'), http.HTTPStatus.UNAUTHORIZED
             except jwt.InvalidTokenError:
-                return flask.jsonify({'message': 'Invalid token. Registration and / or authentication required'}), http.HTTPStatus.UNAUTHORIZED
+                return flask.jsonify('Invalid token. Registration and / or authentication required'), http.HTTPStatus.UNAUTHORIZED
 
         return wrapper
     return decorator

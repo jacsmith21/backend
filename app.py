@@ -43,7 +43,7 @@ def login():
 
     user = mongo.db.users.find_one({'username': username})
     if not user or not security.check_password_hash(user['password'], password):
-        return 'BAD', http.HTTPStatus.BAD_REQUEST
+        return 'Username or password is incorrect.', http.HTTPStatus.BAD_REQUEST
 
     token = jwt.encode(
         {
@@ -63,11 +63,14 @@ def register():
     username, password, code = json.get('username'), json.get('password'), json.get('code')
 
     if code != config.code:
-        return flask.jsonify({'message': 'Invalid code.'}), http.HTTPStatus.UNAUTHORIZED
+        return flask.jsonify('Invalid code.'), http.HTTPStatus.BAD_REQUEST
+
+    if not password or not json.get('initials'):
+        return flask.jsonify('Bad data.'), http.HTTPStatus.BAD_REQUEST
 
     user = mongo.db.users.find_one({'username': username})
     if user is not None:
-        return flask.jsonify({'message': 'Username already exists'}), http.HTTPStatus.BAD_REQUEST
+        return flask.jsonify('Username already exists.'), http.HTTPStatus.BAD_REQUEST
 
     json['password'] = security.generate_password_hash(password, method='sha256')
     mongo.db.users.insert_one(flask.request.json)
