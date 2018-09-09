@@ -1,5 +1,5 @@
 # Curriculum Mapping Backend
-This is the backend system for [curriculum mapping frontend](https://github.com/jacsmith21/curriculummapping).
+This is the backend system for [curriculum mapping frontend](https://github.com/jsmith/curriculummapping).
 
 It is deployed [here](https://royal-canoe-18209.herokuapp.com).
 
