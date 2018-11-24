@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+mongomock = "*"
+gunicorn = "*"
+jsonpatch = "*"
+"html5lib" = "*"
+openpyxl = "*"
+Flask = "*"
+Flask-PyMongo = "*"
+Flask-Cors = "*"
+PyJWT = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

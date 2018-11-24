@@ -4,11 +4,12 @@ This is the backend system for [curriculum mapping frontend](https://github.com/
 It is deployed [here](https://royal-canoe-18209.herokuapp.com).
 
 ## Environment Setup
+Make sure you have MongoDB installed locally. Then run the following commands.
 ```
-pip install -r requirements.txt
+pipenv install
 
 # running the application for development
-python app.py
+pipenv run python app.py
 ```
 
 ## Deploying

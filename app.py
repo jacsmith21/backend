@@ -41,7 +41,11 @@ def login():
     username = flask.request.json.get('username')
     password = flask.request.json.get('password')
 
-    user = mongo.db.users.find_one({'username': username})
+    try:
+        user = mongo.db.users.find_one({'username': username})
+    except pymongo.errors.ServerSelectionTimeoutError:
+        return 'Unable to connect to the database.', http.HTTPStatus.INTERNAL_SERVER_ERROR
+
     if not user or not security.check_password_hash(user['password'], password):
         return 'Username or password is incorrect.', http.HTTPStatus.BAD_REQUEST
 
